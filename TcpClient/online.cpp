@@ -27,7 +27,7 @@ void Online::showUser(PDU *pdu)
     for(uint i = 0; i < uiSize; i++)
     {
         memcpy(caTmp, (char*)(pdu->caMsg) + i * 32, 32);
-        ui->online_lw->addItem(caTmp);
+        ui->online_lw->addItem(QString::fromUtf8(caTmp));
     }
 }
 

@@ -2,18 +2,29 @@
 
 OpeWidget::OpeWidget(QWidget *parent) : QWidget(parent)
 {
+    setWindowTitle("云盘");
+    resize(900, 600);
+
     m_pFriend = new Friend;
     m_pBook = new Book;
     m_pSW = new QStackedWidget;
-    // 创建
     m_pSW->addWidget(m_pFriend);
     m_pSW->addWidget(m_pBook);
-    //
+
     m_pListW = new QListWidget(this);
     m_pListW->addItem("好友");
     m_pListW->addItem("云盘");
-    // 显示界面
+    m_pListW->setFixedWidth(120);
+    m_pListW->setCurrentRow(0);
+    m_pListW->setStyleSheet(
+        "QListWidget { background: #f5f7fa; border: none; border-right: 1px solid #e4e7ed; font-size: 14px; }"
+        "QListWidget::item { padding: 14px 16px; border: none; }"
+        "QListWidget::item:hover { background: #e8edf3; }"
+        "QListWidget::item:selected { background: #d9ecff; color: #409eff; border-right: 3px solid #409eff; }");
+
     QHBoxLayout *pMain = new QHBoxLayout;
+    pMain->setContentsMargins(0, 0, 0, 0);
+    pMain->setSpacing(0);
     pMain->addWidget(m_pListW);
     pMain->addWidget(m_pSW);
     setLayout(pMain);

@@ -127,17 +127,19 @@ void ShareFile::okShare()
         }
     }
     // msg存放好友信息和文件路径
-    PDU *pdu = mkPDU(32 * num + strPath.size() + 1);
+    QByteArray utf8Path = strPath.toUtf8();
+    PDU *pdu = mkPDU(32 * num + utf8Path.size() + 1);
     // data存放好友数量和当前用户名称
     pdu->uiMsgType = ENUM_MSG_TYPE_SHARE_FILE_REQUEST;
-    sprintf(pdu->caData, "%s %d", strName.toStdString().c_str(), num);
+    sprintf(pdu->caData, "%s %d", strName.toUtf8().constData(), num);
     for(int i = 0; i < num; i++)
     {
+        QByteArray utf8Name = friendNameList.at(i).toUtf8();
         memcpy((char*)pdu->caMsg + i*32
-               , friendNameList.at(i).toStdString().c_str()
-               , friendNameList.at(i).size());
+               , utf8Name.constData()
+               , qMin(utf8Name.size(), 32));
     }
-    memcpy((char*)pdu->caMsg + num*32, strPath.toStdString().c_str(), strPath.size());
+    memcpy((char*)pdu->caMsg + num*32, utf8Path.constData(), utf8Path.size() + 1);
     TcpClient::getInstance().getTcpSocket().write((char*)pdu, pdu->uiPDULen);
     free(pdu);
     pdu = NULL;

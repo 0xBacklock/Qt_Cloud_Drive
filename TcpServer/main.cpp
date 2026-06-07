@@ -3,8 +3,10 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    a.setStyleSheet(
+        "* { font-family: \"Microsoft YaHei\", \"Segoe UI\", sans-serif; }"
+    );
     TcpServer w;
-    w.setWindowTitle("服务器");
     w.show();
     return a.exec();
 }

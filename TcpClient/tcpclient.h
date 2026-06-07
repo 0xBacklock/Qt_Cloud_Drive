@@ -63,7 +63,7 @@ private:
     QString m_strCurPath;//当前文件路径
     // 注册
     void regist(PDU *pdu);
-    // 注册
+    // 登录
     void login(PDU *pdu);
     // 查找用户
     void searchUser(PDU *pdu);

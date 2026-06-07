@@ -1,15 +1,26 @@
 #include "tcpserver.h"
 #include "ui_tcpserver.h"
+#include <QLabel>
 
 TcpServer::TcpServer(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::TcpServer)
 {
     ui->setupUi(this);
+    setWindowTitle("云盘服务器");
+    resize(400, 250);
+    setStyleSheet("background: #f5f7fa;");
+
     // 加载配置文件
     loadConfig();
     // 服务端开启监听端口链接
     MyTcpServer::getInstance().listen(QHostAddress(m_strIp), m_usPort);
+
+    QLabel *pStatusLabel = new QLabel(this);
+    pStatusLabel->setText(QString("服务器已启动\n监听地址: %1:%2").arg(m_strIp).arg(m_usPort));
+    pStatusLabel->setAlignment(Qt::AlignCenter);
+    pStatusLabel->setStyleSheet("font-size: 16px; color: #409eff; font-weight: bold; background: transparent;");
+    pStatusLabel->setGeometry(0, 0, 400, 250);
 }
 
 TcpServer::~TcpServer()

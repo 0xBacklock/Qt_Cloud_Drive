@@ -24,7 +24,9 @@ public:
     void updateMsg(const PDU *pdu);
 
 private slots:
-    void on_pushButton_clicked();
+    void on_sendMsg_pb_clicked();
+    void on_inputMsg_le_returnPressed();
+
 
 private:
     Ui::PrivateChat *ui;

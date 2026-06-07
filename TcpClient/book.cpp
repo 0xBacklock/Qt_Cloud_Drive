@@ -4,6 +4,7 @@
 #include"QMessageBox"
 #include<QFileDialog>
 #include<QFile>
+#include<QLabel>
 #include"sharefile.h"
 
 Book::Book(QWidget *parent) : QWidget(parent)
@@ -11,37 +12,49 @@ Book::Book(QWidget *parent) : QWidget(parent)
     m_pDownload = false;
     m_pTimer = new QTimer;
     m_pBookListW = new QListWidget;
-    m_pReturnPB = new QPushButton("返回");
-    m_pCreateDirPB = new QPushButton("创建文件夹");
+    m_pBookListW->setStyleSheet("QListWidget { border: 1px solid #e4e7ed; }");
+    m_pReturnPB = new QPushButton("返回上级");
+    m_pCreateDirPB = new QPushButton("新建文件夹");
     m_pDelDirPB = new QPushButton("删除文件夹");
-    m_pRenameDirPB = new QPushButton("重命名文件夹");
-    m_pFlushDirPB = new QPushButton("刷新文件夹");
+    m_pRenameDirPB = new QPushButton("重命名");
+    m_pFlushDirPB = new QPushButton("刷新");
     m_pUploadFilePB = new QPushButton("上传文件");
     m_pDelFilePB = new QPushButton("删除文件");
     m_pDownloadFilePB = new QPushButton("下载文件");
     m_pShareFilePB = new QPushButton("分享文件");
     m_pMoveFilePB = new QPushButton("移动文件");
-    m_pMoveSelectDirPB = new QPushButton("移动目标目录");
+    m_pMoveSelectDirPB = new QPushButton("选择目标目录");
     m_pMoveSelectDirPB->setEnabled(false);
 
-
+    QLabel *pDirLabel = new QLabel("目录操作");
+    pDirLabel->setStyleSheet("font-weight: bold; color: #606266; padding: 4px 0;");
+    QLabel *pFileLabel = new QLabel("文件操作");
+    pFileLabel->setStyleSheet("font-weight: bold; color: #606266; padding: 4px 0;");
 
     QVBoxLayout *dirLayout = new QVBoxLayout;
+    dirLayout->setSpacing(6);
+    dirLayout->addWidget(pDirLabel);
     dirLayout->addWidget(m_pReturnPB);
     dirLayout->addWidget(m_pCreateDirPB);
     dirLayout->addWidget(m_pDelDirPB);
     dirLayout->addWidget(m_pRenameDirPB);
     dirLayout->addWidget(m_pFlushDirPB);
+    dirLayout->addStretch();
 
     QVBoxLayout *fileLayout = new QVBoxLayout;
+    fileLayout->setSpacing(6);
+    fileLayout->addWidget(pFileLabel);
     fileLayout->addWidget(m_pUploadFilePB);
     fileLayout->addWidget(m_pDelFilePB);
     fileLayout->addWidget(m_pDownloadFilePB);
     fileLayout->addWidget(m_pShareFilePB);
     fileLayout->addWidget(m_pMoveFilePB);
     fileLayout->addWidget(m_pMoveSelectDirPB);
+    fileLayout->addStretch();
 
     QHBoxLayout *hBoxLayout = new QHBoxLayout;
+    hBoxLayout->setContentsMargins(8, 8, 8, 8);
+    hBoxLayout->setSpacing(10);
     hBoxLayout->addWidget(m_pBookListW);
     hBoxLayout->addLayout(dirLayout);
     hBoxLayout->addLayout(fileLayout);
@@ -94,7 +107,7 @@ void Book::updateDirList(const PDU *pdu)
         {
             pItem->setIcon(QIcon(QPixmap(":/map/reg.jpg")));
         }
-        pItem->setText(pFileInfo->caFileName);
+        pItem->setText(QString::fromUtf8(pFileInfo->caFileName));
         m_pBookListW->addItem(pItem);
     }
 }
@@ -144,12 +157,13 @@ void Book::createDir()
     }
     QString strLoginName = TcpClient::getInstance().loginName();
     QString strCurPath = TcpClient::getInstance().curPath();
-    PDU *pdu = mkPDU(strCurPath.size() + 1);
+    QByteArray utf8CurPath = strCurPath.toUtf8();
+    PDU *pdu = mkPDU(utf8CurPath.size() + 1);
     pdu->uiMsgType = ENUM_MSG_TYPE_CREATE_DIR_REQUEST;
     // 用户名、新文件夹名称放在caData， 当前路径放在caMsg
-    strncpy(pdu->caData, strLoginName.toStdString().c_str(), strLoginName.size());
-    strncpy(pdu->caData + 32, strDirName.toStdString().c_str(), strDirName.size());
-    memcpy((char *)pdu->caMsg, strCurPath.toStdString().c_str(), strCurPath.size());
+    strncpy(pdu->caData, strLoginName.toUtf8().constData(), 32);
+    strncpy(pdu->caData + 32, strDirName.toUtf8().constData(), 32);
+    memcpy((char *)pdu->caMsg, utf8CurPath.constData(), utf8CurPath.size() + 1);
     TcpClient::getInstance().getTcpSocket().write((char*)pdu, pdu->uiPDULen);
     free(pdu);
     pdu = NULL;
@@ -158,9 +172,10 @@ void Book::createDir()
 void Book::flushDir()
 {
     QString strCurPath = TcpClient::getInstance().curPath();
-    PDU *pdu = mkPDU(strCurPath.size() + 1);
+    QByteArray utf8CurPath = strCurPath.toUtf8();
+    PDU *pdu = mkPDU(utf8CurPath.size() + 1);
     pdu->uiMsgType = ENUM_MSG_TYPE_FLUSH_DIR_REQUEST;
-    strncpy((char*)pdu->caMsg, strCurPath.toStdString().c_str(), strCurPath.size());
+    memcpy((char*)pdu->caMsg, utf8CurPath.constData(), utf8CurPath.size() + 1);
     TcpClient::getInstance().getTcpSocket().write((char*)pdu, pdu->uiPDULen);
     free(pdu);
     pdu = NULL;
@@ -176,10 +191,11 @@ void Book::delDir()
         return ;
     }
     QString strDelName = pItem->text();
-    PDU *pdu = mkPDU(strCurPath.size() + 1);
+    QByteArray utf8CurPath = strCurPath.toUtf8();
+    PDU *pdu = mkPDU(utf8CurPath.size() + 1);
     pdu->uiMsgType = ENUM_MSG_TYPE_DEL_DIR_REQUEST;
-    strncpy(pdu->caData, strDelName.toStdString().c_str(), strDelName.size());
-    memcpy((char*)pdu->caMsg, strCurPath.toStdString().c_str(), strCurPath.size());
+    strncpy(pdu->caData, strDelName.toUtf8().constData(), 32);
+    memcpy((char*)pdu->caMsg, utf8CurPath.constData(), utf8CurPath.size() + 1);
     TcpClient::getInstance().getTcpSocket().write((char*)pdu, pdu->uiPDULen);
     free(pdu);
     pdu = NULL;
@@ -201,11 +217,12 @@ void Book::renameDir()
         QMessageBox::warning(this, "重命名文件", "新文件名不能为空");
         return ;
     }
-    PDU *pdu = mkPDU(strCurPath.size() + 1);
+    QByteArray utf8CurPath = strCurPath.toUtf8();
+    PDU *pdu = mkPDU(utf8CurPath.size() + 1);
     pdu->uiMsgType = ENUM_MSG_TYPE_RENAME_DIR_REQUEST;
-    strncpy(pdu->caData, strOldName.toStdString().c_str(), strOldName.size());
-    strncpy(pdu->caData + 32, strNewName.toStdString().c_str(), strNewName.size());
-    memcpy((char*)pdu->caMsg, strCurPath.toStdString().c_str(), strCurPath.size());
+    strncpy(pdu->caData, strOldName.toUtf8().constData(), 32);
+    strncpy(pdu->caData + 32, strNewName.toUtf8().constData(), 32);
+    memcpy((char*)pdu->caMsg, utf8CurPath.constData(), utf8CurPath.size() + 1);
     TcpClient::getInstance().getTcpSocket().write((char*)pdu, pdu->uiPDULen);
     free(pdu);
     pdu = NULL;
@@ -217,10 +234,11 @@ void Book::enterDir(const QModelIndex &index)
     QString strCurPath = TcpClient::getInstance().curPath();
     // 缓存数据
     m_enterPath = QString("%1/%2").arg(strCurPath).arg(strDirName);
-    PDU *pdu = mkPDU(strCurPath.size() + 1);
+    QByteArray utf8CurPath = strCurPath.toUtf8();
+    PDU *pdu = mkPDU(utf8CurPath.size() + 1);
     pdu->uiMsgType = ENUM_MSG_TYPE_ENTER_DIR_REQUEST;
-    strncpy(pdu->caData, strDirName.toStdString().c_str(), strDirName.size());
-    memcpy((char*)pdu->caMsg, strCurPath.toStdString().c_str(), strCurPath.size());
+    strncpy(pdu->caData, strDirName.toUtf8().constData(), 32);
+    memcpy((char*)pdu->caMsg, utf8CurPath.constData(), utf8CurPath.size() + 1);
     TcpClient::getInstance().getTcpSocket().write((char*)pdu, pdu->uiPDULen);
     free(pdu);
     pdu = NULL;
@@ -261,10 +279,11 @@ void Book::uploadPre()
     QString fileName = m_strUploadFilePath.right(m_strUploadFilePath.size() - idx - 1);
     QFile file(m_strUploadFilePath);
     qint64 fileSize = file.size();//文件的大小
-    PDU *pdu = mkPDU(strCurPath.size() + 1);
+    QByteArray utf8CurPath = strCurPath.toUtf8();
+    PDU *pdu = mkPDU(utf8CurPath.size() + 1);
     pdu->uiMsgType = ENUM_MSG_TYPE_UPLOAD_FILE_REQUEST;
-    memcpy((char*)pdu->caMsg, strCurPath.toStdString().c_str(), strCurPath.size());
-    sprintf(pdu->caData, "%s %lld", fileName.toStdString().c_str(), fileSize);
+    memcpy((char*)pdu->caMsg, utf8CurPath.constData(), utf8CurPath.size() + 1);
+    sprintf(pdu->caData, "%s %lld", fileName.toUtf8().constData(), fileSize);
     qDebug() << pdu->caData;
     qDebug() << (char*)pdu->caMsg;
     TcpClient::getInstance().getTcpSocket().write((char*)pdu, pdu->uiPDULen);
@@ -322,10 +341,11 @@ void Book::delFile()
         return ;
     }
     QString strDelName = pItem->text();
-    PDU *pdu = mkPDU(strCurPath.size() + 1);
+    QByteArray utf8CurPath = strCurPath.toUtf8();
+    PDU *pdu = mkPDU(utf8CurPath.size() + 1);
     pdu->uiMsgType = ENUM_MSG_TYPE_DEL_FILE_REQUEST;
-    strncpy(pdu->caData, strDelName.toStdString().c_str(), strDelName.size());
-    memcpy((char*)pdu->caMsg, strCurPath.toStdString().c_str(), strCurPath.size());
+    strncpy(pdu->caData, strDelName.toUtf8().constData(), 32);
+    memcpy((char*)pdu->caMsg, utf8CurPath.constData(), utf8CurPath.size() + 1);
     TcpClient::getInstance().getTcpSocket().write((char*)pdu, pdu->uiPDULen);
     free(pdu);
     pdu = NULL;
@@ -341,7 +361,7 @@ void Book::downloadFile()
         return ;
     }
     QString strDownloadName = pItem->text();
-    QString strSaveFilePath = QFileDialog::getSaveFileName();
+    QString strSaveFilePath = QFileDialog::getSaveFileName(this, "保存文件", strDownloadName);
     if(strSaveFilePath.isEmpty())
     {
         QMessageBox::warning(this, "下载文件", "请指定要保存的位置");
@@ -349,10 +369,11 @@ void Book::downloadFile()
         return ;
     }
     m_strSaveFilePath = strSaveFilePath;
-    PDU *pdu = mkPDU(strCurPath.size() + 1);
+    QByteArray utf8CurPath = strCurPath.toUtf8();
+    PDU *pdu = mkPDU(utf8CurPath.size() + 1);
     pdu->uiMsgType = ENUM_MSG_TYPE_DOWNLOAD_FILE_REQUEST;
-    strcpy(pdu->caData, strDownloadName.toStdString().c_str());
-    memcpy((char*)pdu->caMsg, strCurPath.toStdString().c_str(), strCurPath.size());
+    strncpy(pdu->caData, strDownloadName.toUtf8().constData(), 32);
+    memcpy((char*)pdu->caMsg, utf8CurPath.constData(), utf8CurPath.size() + 1);
     TcpClient::getInstance().getTcpSocket().write((char*)pdu, pdu->uiPDULen);
     free(pdu);
     pdu = NULL;
@@ -368,8 +389,7 @@ void Book::shareFile()
     }
     m_shareFileName = pItem->text();
     Friend *pFriend = OpeWidget::getInstance().getFriend();
-    QListWidget *pFriendList = pFriend->getFriendList();
-    ShareFile::getInstance().updateFriend(pFriendList);
+    pFriend->flushFriend();// 异步刷新好友列表，返回后会通过 updateFriendList 填充分享窗口
     if(ShareFile::getInstance().isHidden())
     {
         ShareFile::getInstance().show();
@@ -403,14 +423,16 @@ void Book::selectDestDir()
     m_strSelectDestDirPath = strCurPath + "/" + strDestDir;
     m_pMoveSelectDirPB->setEnabled(false);
 
-    int srcLen = m_strMoveFilePath.size();
-    int destLen = m_strSelectDestDirPath.size();
+    QByteArray utf8MoveFilePath = m_strMoveFilePath.toUtf8();
+    QByteArray utf8DestDirPath = m_strSelectDestDirPath.toUtf8();
+    int srcLen = utf8MoveFilePath.size();
+    int destLen = utf8DestDirPath.size();
     PDU *pdu = mkPDU(srcLen + destLen + 2);
     pdu->uiMsgType = ENUM_MSG_TYPE_MOVE_FILE_REQUEST;
-    sprintf(pdu->caData, "%d %d %s", srcLen, destLen, m_strMoveFileName.toStdString().c_str());
+    sprintf(pdu->caData, "%d %d %s", srcLen, destLen, m_strMoveFileName.toUtf8().constData());
 
-    memcpy(pdu->caMsg, m_strMoveFilePath.toStdString().c_str(), srcLen);
-    memcpy((char*)(pdu->caMsg) + (srcLen + 1), m_strSelectDestDirPath.toStdString().c_str(), destLen);
+    memcpy(pdu->caMsg, utf8MoveFilePath.constData(), srcLen + 1);
+    memcpy((char*)(pdu->caMsg) + (srcLen + 1), utf8DestDirPath.constData(), destLen + 1);
     TcpClient::getInstance().getTcpSocket().write((char*)pdu, pdu->uiPDULen);
     free(pdu);
     pdu = NULL;

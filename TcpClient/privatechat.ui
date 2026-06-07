@@ -6,52 +6,81 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>289</height>
+    <width>520</width>
+    <height>440</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>私聊</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>10</number>
+   </property>
+   <property name="leftMargin">
+    <number>12</number>
+   </property>
+   <property name="topMargin">
+    <number>12</number>
+   </property>
+   <property name="rightMargin">
+    <number>12</number>
+   </property>
+   <property name="bottomMargin">
+    <number>12</number>
+   </property>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <widget class="QTextEdit" name="showMsg_te">
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string>QTextEdit { background: #f0f2f5; border: 1px solid #e4e7ed; border-radius: 8px; padding: 12px; }</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="inputLayout">
+     <property name="spacing">
+      <number>8</number>
+     </property>
      <item>
-      <widget class="QTextEdit" name="showMsg_te">
+      <widget class="QLineEdit" name="inputMsg_le">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>36</height>
+        </size>
+       </property>
        <property name="font">
         <font>
-         <family>Arial</family>
-         <pointsize>24</pointsize>
+         <pointsize>13</pointsize>
         </font>
        </property>
       </widget>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLineEdit" name="inputMsg_le">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>24</pointsize>
-          </font>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="sendMsg_pb">
-         <property name="font">
-          <font>
-           <family>Arial</family>
-           <pointsize>24</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>发送</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QPushButton" name="sendMsg_pb">
+       <property name="minimumSize">
+        <size>
+         <width>80</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>13</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>发送</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

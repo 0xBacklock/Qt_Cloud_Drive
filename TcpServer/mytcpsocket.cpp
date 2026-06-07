@@ -297,13 +297,12 @@ void MyTcpSocket::allOnline(PDU *pdu)
     retPdu->uiMsgType = ENUM_MSG_TYPE_ALL_ONLINE_RESPOND;
     for(int i = 0; i < ret.size(); i++)
     {
+        QByteArray utf8Name = ret.at(i).toUtf8();
         memcpy((char *)(retPdu->caMsg) + i*32
-               , ret.at(i).toStdString().c_str()
-               , ret.at(i).size());
+               , utf8Name.constData()
+               , qMin(utf8Name.size(), 32));
     }
-    // 发送通信对象内容给客户端
     this->write((char *)retPdu, retPdu->uiPDULen);
-    // 释放内存
     free(retPdu);
     retPdu = NULL;
 }
@@ -412,10 +411,10 @@ void MyTcpSocket::flushFriend(PDU *pdu)
     retPdu->uiMsgType = ENUM_MSG_TYPE_FLUSH_FRIEND_RESPOND;
     for(int i = 0; i < ret.size(); i++)
     {
-        // 记住，这里放的应该的char*，而不是int[], 因为是要复制char*的内容过来
+        QByteArray utf8Name = ret.at(i).toUtf8();
         memcpy((char*)(retPdu->caMsg) + i * 32
-               , ret.at(i).toStdString().c_str()
-               , ret.at(i).size());
+               , utf8Name.constData()
+               , qMin(utf8Name.size(), 32));
     }
     write((char*)retPdu, retPdu->uiPDULen);
     free(retPdu);
@@ -632,7 +631,7 @@ PDU * MyTcpSocket::getDirFilePDU(QString curPath)
     {
         // 获取返回PDU中第i块FileInfo的内存区域，向里面塞入数据
         pFileInfo = (FileInfo *)retPdu->caMsg + i;
-        strcpy(pFileInfo->caFileName, fileInfoList[i].fileName().toStdString().c_str());
+        strncpy(pFileInfo->caFileName, fileInfoList[i].fileName().toUtf8().constData(), 32);
         if(fileInfoList[i].isDir())
         {
             pFileInfo->iFileType = 0;

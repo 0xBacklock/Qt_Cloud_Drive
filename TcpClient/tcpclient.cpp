@@ -8,7 +8,7 @@ TcpClient::TcpClient(QWidget *parent) :
     ui(new Ui::TcpClient)
 {
     ui->setupUi(this);
-    resize(500, 300);
+    setWindowTitle("云盘");
     // 加载配置文件
     loadConfig();
     // 定义服务器链接成功槽函数
@@ -172,20 +172,21 @@ void TcpClient::deleteFriend(PDU *pdu)
 
 void TcpClient::privateChat(PDU *pdu)
 {
+    // 只有窗口隐藏时才设置聊天对象（新的会话），已打开时不覆盖当前聊天目标
     if(PrivateChat::getInstace().isHidden())
     {
         PrivateChat::getInstace().show();
+        char loginName[32] = {'\0'};
+        memcpy(loginName, pdu->caData + 32, 32);
+        PrivateChat::getInstace().setChatName(QString::fromUtf8(loginName));
     }
-    // 给最新的一个发送过来的好友发送消息
-    char loginName[32] = {'\0'};
-    memcpy(loginName, pdu->caData + 32, 32);
-    PrivateChat::getInstace().setChatName(loginName);
     PrivateChat::getInstace().updateMsg(pdu);
 }
 
 void TcpClient::createDir(PDU *pdu)
 {
     QMessageBox::information(this, "创建文件夹", pdu->caData);
+    OpeWidget::getInstance().getBook()->flushDir();
 }
 
 void TcpClient::flushDir(PDU *pdu)
@@ -196,11 +197,13 @@ void TcpClient::flushDir(PDU *pdu)
 void TcpClient::delDir(PDU *pdu)
 {
     QMessageBox::information(this, "删除文件夹", pdu->caData);
+    OpeWidget::getInstance().getBook()->flushDir();
 }
 
 void TcpClient::renameDir(PDU *pdu)
 {
     QMessageBox::information(this, "重命名文件", pdu->caData);
+    OpeWidget::getInstance().getBook()->flushDir();
 }
 
 void TcpClient::enterDir(PDU *pdu)
@@ -257,7 +260,7 @@ void TcpClient::shareFileNote(PDU *pdu)
             retPdu->uiMsgType = ENUM_MSG_TYPE_SHARE_FILE_NOTE_REQUEST;
             memcpy(retPdu->caMsg, pdu->caMsg, pdu->uiMsgLen);
             QString strName = TcpClient::getInstance().loginName();
-            strcpy(retPdu->caData, strName.toStdString().c_str());
+            strncpy(retPdu->caData, strName.toUtf8().constData(), 32);
             m_tcpSocket.write((char*)retPdu,retPdu->uiPDULen);
         }
     }
@@ -393,11 +396,13 @@ void TcpClient::recvMsg()
     case ENUM_MSG_TYPE_UPLOAD_FILE_RESPOND:
     {
         QMessageBox::information(this, "上传文件", pdu->caData);
+        OpeWidget::getInstance().getBook()->flushDir();
         break;
     }
     case ENUM_MSG_TYPE_DEL_FILE_RESPOND:
     {
         QMessageBox::information(this, "删除文件", pdu->caData);
+        OpeWidget::getInstance().getBook()->flushDir();
         break;
     }
     case ENUM_MSG_TYPE_DOWNLOAD_FILE_RESPOND:
@@ -419,6 +424,7 @@ void TcpClient::recvMsg()
     case ENUM_MSG_TYPE_MOVE_FILE_RESPOND:
     {
         QMessageBox::information(this, "移动文件", pdu->caData);
+        OpeWidget::getInstance().getBook()->flushDir();
         break;
     }
     default:
@@ -440,10 +446,8 @@ void TcpClient::on_login_pb_clicked()
         m_strLoginName = strName;
         PDU *pdu = mkPDU(0);
         pdu->uiMsgType = ENUM_MSG_TYPE_LOGIN_REQUEST;
-        // 前32个字符复制账号名
-        strncpy(pdu->caData, strName.toStdString().c_str(), 32);
-        // 后32个字符复制密码
-        strncpy(pdu->caData + 32, strPwd.toStdString().c_str(), 32);
+        strncpy(pdu->caData, strName.toUtf8().constData(), 32);
+        strncpy(pdu->caData + 32, strPwd.toUtf8().constData(), 32);
         // 发送通信对象给服务器
         m_tcpSocket.write((char*)pdu, pdu->uiPDULen);
         // 释放内存
@@ -465,10 +469,8 @@ void TcpClient::on_regist_pb_clicked()
     {
         PDU *pdu = mkPDU(0);
         pdu->uiMsgType = ENUM_MSG_TYPE_REGIST_REQUEST;
-        // 前32个字符复制账号名
-        strncpy(pdu->caData, strName.toStdString().c_str(), 32);
-        // 后32个字符复制密码
-        strncpy(pdu->caData + 32, strPwd.toStdString().c_str(), 32);
+        strncpy(pdu->caData, strName.toUtf8().constData(), 32);
+        strncpy(pdu->caData + 32, strPwd.toUtf8().constData(), 32);
         // 发送通信对象给服务器
         m_tcpSocket.write((char*)pdu, pdu->uiPDULen);
         // 释放内存
