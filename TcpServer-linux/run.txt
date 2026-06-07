@@ -1,0 +1,7 @@
+chmod +x run.sh
+
+./run.sh start     # 启动
+./run.sh stop      # 停止
+./run.sh restart   # 重启
+./run.sh status    # 查看状态
+./run.sh logs      # 实时日志
