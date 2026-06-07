@@ -1,1 +1,50 @@
 /待办
+/TcpClient/.qtcreator
+/TcpClient/build-*
+/TcpServer/.qtcreator
+/TcpServer/build-*
+
+# Build directories
+build/
+build-*/
+
+# Qt Creator user files
+*.pro.user
+*.pro.user.*
+
+# Generated files
+Makefile*
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+
+# Debug / Release
+debug/
+release/
+
+# Executables
+*.exe
+*.dll
+*.so
+*.dylib
+*.app
+
+# Object files
+*.o
+*.obj
+
+# Qt generated
+.ui_autogen/
+moc_predefs.h
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Visual Studio
+.vs/
+*.vcxproj.user
